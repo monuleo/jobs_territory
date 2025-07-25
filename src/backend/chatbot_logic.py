@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
-from .knowledge_base import KnowledgeBase
-from .utils import normalize_text, extract_keywords
+from knowledge_base import KnowledgeBase
+from utils import normalize_text, extract_keywords
 
 class JobsTerritoryBot:
     def __init__(self):

@@ -43,7 +43,7 @@ class KnowledgeBase:
         Search for relevant content based on query.
         Returns list of (answer, score, category) tuples sorted by relevance.
         """
-        from .utils import extract_keywords, calculate_match_score, normalize_text
+        from utils import extract_keywords, calculate_match_score, normalize_text
         
         user_keywords = extract_keywords(query)
         user_text_normalized = normalize_text(query)
