@@ -1,270 +1,206 @@
 import React, { useState } from 'react';
-import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Loader2, TrendingUp, User, DollarSign, GraduationCap, Target, Award, BarChart3 } from 'lucide-react';
+import { Upload, FileText, CheckCircle, XCircle, AlertCircle, User, Briefcase, DollarSign, GraduationCap, Target, Loader2 } from 'lucide-react';
+import axios from 'axios';
 
-interface ScoreBreakdown {
-  skills_score: number;
-  experience_score: number;
-  ctc_score: number;
-  role_alignment_score: number;
-  soft_skills_score: number;
-  academic_score: number;
-}
-
-interface TopMatchingRole {
-  job_title: string;
-  company: string;
-  semantic_similarity_score: number;
-}
-
-interface ResponsibilityMatch {
-  responsibility: string;
-  found_in_cv: boolean;
-  relevant_snippet: string;
-  confidence_score: number;
-}
-
-interface SoftSkillMatch {
-  skill: string;
-  cv_context: string;
-  jd_context: string;
-}
-
-interface EnhancedMatchResult {
-  overall_score: number;
+interface MatchResult {
+  score: number;
   matched_skills: string[];
   missing_jd_skills: string[];
-  extra_resume_skills: string[];
+  extra_cv_skills: string[];
   experience_feedback: string;
   ctc_feedback: string;
-  academic_feedback: string;
-  role_alignment_summary: string;
-  top_matching_cv_roles: TopMatchingRole[];
-  jd_responsibilities_matched_in_cv: ResponsibilityMatch[];
-  inferred_soft_skills_match: SoftSkillMatch[];
-  quantifiable_achievements_summary: string[];
-  score_breakdown: ScoreBreakdown;
-}
-
-interface ProcessingInfo {
-  jd_title: string;
-  cv_skills_count: number;
-  jd_skills_count: number;
-  processing_timestamp: string;
-}
-
-interface ApiResponse {
-  match_result: EnhancedMatchResult;
-  processing_info: ProcessingInfo;
-  status: string;
+  academic_alignment_feedback: string;
+  jd_responsibilities_matched_in_cv: Array<{
+    responsibility: string;
+    found_in_cv: boolean;
+    relevant_snippet: string;
+    confidence: number;
+  }>;
+  metadata: {
+    jd_filename: string;
+    cv_filename: string;
+    jd_skills_count: number;
+    cv_skills_count: number;
+    jd_experience_years: number;
+    cv_experience_years: number;
+    jd_responsibilities_count: number;
+    processing_note: string;
+  };
 }
 
 const ATSComponent: React.FC = () => {
   const [jdFile, setJdFile] = useState<File | null>(null);
-  const [cvFile, setCvFile] = useState<File | null>(null);
-  const [matchResult, setMatchResult] = useState<EnhancedMatchResult | null>(null);
-  const [processingInfo, setProcessingInfo] = useState<ProcessingInfo | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState<MatchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleJdFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setJdFile(file);
-    setError(null);
-    setMatchResult(null);
-    setProcessingInfo(null);
-  };
-
-  const handleCvFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null;
-    setCvFile(file);
-    setError(null);
-    setMatchResult(null);
-    setProcessingInfo(null);
-  };
-
-  const handleCompare = async () => {
-    if (!jdFile || !cvFile) {
-      setError('Please select both Job Description and CV files');
+  const handleFileUpload = (file: File, type: 'jd' | 'resume') => {
+    const supportedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+    
+    if (!supportedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.docx')) {
+      setError(`Unsupported file type for ${type}. Please upload PDF, DOCX, or TXT files.`);
       return;
     }
 
-    setLoading(true);
+    if (file.size > 10 * 1024 * 1024) {
+      setError(`File size too large for ${type}. Maximum 10MB allowed.`);
+      return;
+    }
+
     setError(null);
-    setMatchResult(null);
-    setProcessingInfo(null);
+    if (type === 'jd') {
+      setJdFile(file);
+    } else {
+      setResumeFile(file);
+    }
+  };
+
+  const handleMatch = async () => {
+    if (!jdFile || !resumeFile) {
+      setError('Please upload both Job Description and Resume files.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setResult(null);
 
     try {
       const formData = new FormData();
       formData.append('jd_file', jdFile);
-      formData.append('resume_file', cvFile);
+      formData.append('resume_file', resumeFile);
 
-      const response = await fetch('http://localhost:5001/api/ats/match', {
-        method: 'POST',
-        body: formData,
+      const response = await axios.post<MatchResult>('http://localhost:8000/api/ats/match', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        timeout: 60000, // 60 second timeout
       });
 
-      const data: ApiResponse | { error: string; status: string } = await response.json();
-
-      if (response.ok && data.status === 'success' && 'match_result' in data) {
-        setMatchResult(data.match_result);
-        setProcessingInfo(data.processing_info);
+      setResult(response.data);
+    } catch (err: any) {
+      console.error('Match error:', err);
+      if (err.response?.data?.detail) {
+        setError(`Error: ${err.response.data.detail}`);
+      } else if (err.code === 'ECONNABORTED') {
+        setError('Request timeout. Please try again with smaller files.');
       } else {
-        setError('error' in data ? data.error : 'An unexpected error occurred');
+        setError('Failed to process files. Please check your connection and try again.');
       }
-    } catch (err) {
-      setError('Network error: Unable to connect to the server');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-green-600 bg-green-50 border-green-200';
+    if (score >= 60) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    return 'text-red-600 bg-red-50 border-red-200';
   };
 
-  const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'bg-green-100 border-green-200';
-    if (score >= 60) return 'bg-yellow-100 border-yellow-200';
-    return 'bg-red-100 border-red-200';
-  };
-
-  const CircularProgress = ({ score, size = 120 }: { score: number; size?: number }) => {
-    const radius = (size - 20) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDasharray = circumference;
-    const strokeDashoffset = circumference - (score / 100) * circumference;
-
-    return (
-      <div className="relative inline-flex items-center justify-center">
-        <svg width={size} height={size} className="transform -rotate-90">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="8"
-            fill="transparent"
-            className="text-gray-200"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke="currentColor"
-            strokeWidth="8"
-            fill="transparent"
-            strokeDasharray={strokeDasharray}
-            strokeDashoffset={strokeDashoffset}
-            className={getScoreColor(score)}
-            strokeLinecap="round"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-2xl font-bold ${getScoreColor(score)}`}>
-            {score}%
-          </span>
-        </div>
-      </div>
-    );
+  const getScoreLabel = (score: number) => {
+    if (score >= 80) return 'Excellent Match';
+    if (score >= 60) return 'Good Match';
+    if (score >= 40) return 'Fair Match';
+    return 'Poor Match';
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-white">
+    <div className="max-w-6xl mx-auto p-6 bg-white">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Advanced ATS CV Matcher</h1>
-        <p className="text-lg text-gray-600 mb-4">
-          AI-powered CV analysis with ChatGPT-level accuracy for recruitment professionals
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Advanced CV-to-JD Matching</h1>
+        <p className="text-gray-600 mb-4">
+          Upload your Job Description and Resume for comprehensive matching analysis
         </p>
-        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-2xl mx-auto">
-          <p className="text-sm text-blue-800">
-            <AlertCircle className="inline w-4 h-4 mr-1" />
-            Your CV and JD files are processed in real-time for immediate matching and are never stored on our servers. All data is ephemeral.
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 inline-block">
+          <p className="text-sm text-blue-800 flex items-center">
+            <AlertCircle className="w-4 h-4 mr-2" />
+            Your files are processed on-the-fly and not stored on our servers
           </p>
         </div>
       </div>
 
       {/* File Upload Section */}
-      <div className="grid md:grid-cols-2 gap-8 mb-8">
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
         {/* Job Description Upload */}
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-blue-400 transition-colors">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
           <div className="text-center">
-            <FileText className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Job Description</h3>
-            <p className="text-sm text-gray-500 mb-6">Upload PDF, DOCX, or TXT file</p>
+            <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Job Description</h3>
+            <p className="text-sm text-gray-500 mb-4">Upload JD file (PDF, DOCX, TXT)</p>
+            
             <input
               type="file"
-              accept=".pdf,.docx,.txt"
-              onChange={handleJdFileChange}
+              id="jd-upload"
               className="hidden"
-              id="jd-file-input"
+              accept=".pdf,.docx,.doc,.txt"
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'jd')}
             />
             <label
-              htmlFor="jd-file-input"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
+              htmlFor="jd-upload"
+              className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
-              <Upload className="w-5 h-5 mr-2" />
-              Choose JD File
+              <Upload className="w-4 h-4 mr-2" />
+              Choose File
             </label>
+            
             {jdFile && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {jdFile.name}
-                </p>
+              <div className="mt-3 flex items-center justify-center text-sm text-green-600">
+                <FileText className="w-4 h-4 mr-1" />
+                {jdFile.name}
               </div>
             )}
           </div>
         </div>
 
-        {/* CV Upload */}
-        <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 hover:border-blue-400 transition-colors">
+        {/* Resume Upload */}
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-blue-400 transition-colors">
           <div className="text-center">
-            <User className="mx-auto h-16 w-16 text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Candidate CV</h3>
-            <p className="text-sm text-gray-500 mb-6">Upload PDF, DOCX, or TXT file</p>
+            <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Resume/CV</h3>
+            <p className="text-sm text-gray-500 mb-4">Upload CV file (PDF, DOCX, TXT)</p>
+            
             <input
               type="file"
-              accept=".pdf,.docx,.txt"
-              onChange={handleCvFileChange}
+              id="resume-upload"
               className="hidden"
-              id="cv-file-input"
+              accept=".pdf,.docx,.doc,.txt"
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'resume')}
             />
             <label
-              htmlFor="cv-file-input"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
+              htmlFor="resume-upload"
+              className="cursor-pointer inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
             >
-              <Upload className="w-5 h-5 mr-2" />
-              Choose CV File
+              <Upload className="w-4 h-4 mr-2" />
+              Choose File
             </label>
-            {cvFile && (
-              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800 flex items-center justify-center">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  {cvFile.name}
-                </p>
+            
+            {resumeFile && (
+              <div className="mt-3 flex items-center justify-center text-sm text-green-600">
+                <FileText className="w-4 h-4 mr-1" />
+                {resumeFile.name}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Compare Button */}
+      {/* Match Button */}
       <div className="text-center mb-8">
         <button
-          onClick={handleCompare}
-          disabled={!jdFile || !cvFile || loading}
-          className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-lg text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+          onClick={handleMatch}
+          disabled={!jdFile || !resumeFile || isLoading}
+          className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? (
+          {isLoading ? (
             <>
-              <Loader2 className="w-6 h-6 mr-3 animate-spin" />
-              Analyzing with AI...
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Processing...
             </>
           ) : (
             <>
-              <Target className="w-6 h-6 mr-3" />
+              <Target className="w-5 h-5 mr-2" />
               Analyze Match
             </>
           )}
@@ -273,255 +209,247 @@ const ATSComponent: React.FC = () => {
 
       {/* Error Display */}
       {error && (
-        <div className="mb-8 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
             <XCircle className="w-5 h-5 text-red-500 mr-2" />
-            <p className="text-red-800">{error}</p>
+            <p className="text-red-700">{error}</p>
           </div>
         </div>
       )}
 
       {/* Results Display */}
-      {matchResult && processingInfo && (
-        <div className="space-y-8">
-          {/* Processing Info */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Job Title: <strong>{processingInfo.jd_title}</strong></span>
-              <span>CV Skills: <strong>{processingInfo.cv_skills_count}</strong></span>
-              <span>JD Skills: <strong>{processingInfo.jd_skills_count}</strong></span>
-            </div>
-          </div>
-
-          {/* Overall Score with Circular Progress */}
-          <div className={`p-8 rounded-xl border-2 ${getScoreBgColor(matchResult.overall_score)}`}>
+      {result && (
+        <div className="space-y-6">
+          {/* Overall Score */}
+          <div className={`rounded-lg border-2 p-6 ${getScoreColor(result.score)}`}>
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">Overall Match Score</h2>
-              <CircularProgress score={matchResult.overall_score} size={150} />
-              <p className="text-lg text-gray-700 mt-4">
-                Comprehensive AI-powered analysis complete
-              </p>
-            </div>
-          </div>
-
-          {/* Score Breakdown */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-              <BarChart3 className="w-6 h-6 mr-2" />
-              Detailed Score Breakdown
-            </h3>
-            <div className="grid md:grid-cols-3 gap-6">
-              {Object.entries(matchResult.score_breakdown).map(([key, score]) => (
-                <div key={key} className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-700 capitalize">
-                      {key.replace('_', ' ')}
-                    </span>
-                    <span className={`text-lg font-bold ${getScoreColor(score)}`}>
-                      {score}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                      style={{ width: `${score}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Experience, CTC, and Academic Analysis */}
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h4 className="text-lg font-semibold text-blue-800 mb-3 flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2" />
-                Experience Analysis
-              </h4>
-              <p className="text-blue-700 text-sm">{matchResult.experience_feedback}</p>
-            </div>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <h4 className="text-lg font-semibold text-green-800 mb-3 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" />
-                CTC Alignment
-              </h4>
-              <p className="text-green-700 text-sm">{matchResult.ctc_feedback}</p>
-            </div>
-
-            <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
-              <h4 className="text-lg font-semibold text-purple-800 mb-3 flex items-center">
-                <GraduationCap className="w-5 h-5 mr-2" />
-                Academic Fit
-              </h4>
-              <p className="text-purple-700 text-sm">{matchResult.academic_feedback}</p>
-            </div>
-          </div>
-
-          {/* Role Alignment */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Contextual Role Alignment</h3>
-            <p className="text-gray-700 mb-6">{matchResult.role_alignment_summary}</p>
-            
-            {matchResult.top_matching_cv_roles.length > 0 && (
-              <div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-4">Top Matching Previous Roles</h4>
-                <div className="space-y-3">
-                  {matchResult.top_matching_cv_roles.map((role, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{role.job_title}</p>
-                        <p className="text-sm text-gray-600">{role.company}</p>
-                      </div>
-                      <div className={`text-lg font-bold ${getScoreColor(role.semantic_similarity_score)}`}>
-                        {role.semantic_similarity_score}%
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="text-4xl font-bold mb-2">{result.score}%</div>
+              <div className="text-lg font-medium">{getScoreLabel(result.score)}</div>
+              <div className="text-sm mt-2 opacity-75">
+                Overall compatibility between CV and Job Description
               </div>
-            )}
-          </div>
-
-          {/* JD Core Responsibilities Matched */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">JD Core Responsibilities Found in CV</h3>
-            <div className="space-y-4">
-              {matchResult.jd_responsibilities_matched_in_cv.map((resp, index) => (
-                <div key={index} className={`p-4 rounded-lg border-2 ${resp.found_in_cv ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 mr-3 mt-1">
-                      {resp.found_in_cv ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-600" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900 mb-2">{resp.responsibility}</p>
-                      {resp.found_in_cv && resp.relevant_snippet && (
-                        <div className="bg-white p-3 rounded border">
-                          <p className="text-sm text-gray-700 italic">"{resp.relevant_snippet}"</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Confidence: {resp.confidence_score}%
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
           {/* Skills Analysis */}
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Matched Skills */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-green-800 mb-4 flex items-center">
-                <CheckCircle className="w-5 h-5 mr-2" />
-                Matched Skills ({matchResult.matched_skills.length})
-              </h3>
-              <div className="space-y-2">
-                {matchResult.matched_skills.length > 0 ? (
-                  matchResult.matched_skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="inline-block bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full mr-2 mb-2"
-                    >
-                      {skill}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-green-600 text-sm">No matching skills found</p>
-                )}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Target className="w-5 h-5 mr-2 text-blue-600" />
+              Skills Analysis
+            </h3>
+            
+            <div className="grid md:grid-cols-3 gap-4">
+              {/* Matched Skills */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-800 mb-2 flex items-center">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Matched Skills ({result.matched_skills.length})
+                </h4>
+                <div className="space-y-1">
+                  {result.matched_skills.length > 0 ? (
+                    result.matched_skills.map((skill, index) => (
+                      <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-1 mb-1">
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm text-green-600">No matching skills found</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Missing Skills */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 className="font-medium text-red-800 mb-2 flex items-center">
+                  <XCircle className="w-4 h-4 mr-1" />
+                  Missing Skills ({result.missing_jd_skills.length})
+                </h4>
+                <div className="space-y-1">
+                  {result.missing_jd_skills.length > 0 ? (
+                    result.missing_jd_skills.map((skill, index) => (
+                      <span key={index} className="inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded mr-1 mb-1">
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm text-red-600">All required skills found</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Extra Skills */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                  <AlertCircle className="w-4 h-4 mr-1" />
+                  Additional Skills ({result.extra_cv_skills.length})
+                </h4>
+                <div className="space-y-1">
+                  {result.extra_cv_skills.length > 0 ? (
+                    result.extra_cv_skills.slice(0, 10).map((skill, index) => (
+                      <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mr-1 mb-1">
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm text-blue-600">No additional skills</p>
+                  )}
+                  {result.extra_cv_skills.length > 10 && (
+                    <p className="text-xs text-blue-600 mt-1">+{result.extra_cv_skills.length - 10} more</p>
+                  )}
+                </div>
               </div>
             </div>
-
-            {/* Missing Skills */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-red-800 mb-4 flex items-center">
-                <XCircle className="w-5 h-5 mr-2" />
-                Missing Skills ({matchResult.missing_jd_skills.length})
-              </h3>
-              <div className="space-y-2">
-                {matchResult.missing_jd_skills.length > 0 ? (
-                  matchResult.missing_jd_skills.map((skill, index) => (
-                    <span
-                      key={index}
-                      className="inline-block bg-red-100 text-red-800 text-xs px-3 py-1 rounded-full mr-2 mb-2"
-                    >
-                      {skill}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-red-600 text-sm">All required skills found!</p>
-                )}
-              </div>
-            </div>
-
-            {/* Additional Skills */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center">
-                <AlertCircle className="w-5 h-5 mr-2" />
-                Additional Skills ({matchResult.extra_resume_skills.length})
-              </h3>
-              <div className="space-y-2">
-                {matchResult.extra_resume_skills.length > 0 ? (
-                  matchResult.extra_resume_skills.slice(0, 10).map((skill, index) => (
-                    <span
-                      key={index}
-                      className="inline-block bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full mr-2 mb-2"
-                    >
-                      {skill}
-                    </span>
-                  ))
-                ) : (
-                  <p className="text-blue-600 text-sm">No additional skills found</p>
-                )}
-                {matchResult.extra_resume_skills.length > 10 && (
-                  <p className="text-blue-600 text-xs mt-2">
-                    +{matchResult.extra_resume_skills.length - 10} more skills
-                  </p>
-                )}
+          </div> 
+         {/* Experience Analysis */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <Briefcase className="w-5 h-5 mr-2 text-purple-600" />
+              Experience Analysis
+            </h3>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-gray-700">{result.experience_feedback}</p>
+              <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">JD Requirement:</span>
+                  <span className="ml-2 text-gray-800">{result.metadata.jd_experience_years}+ years</span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">CV Experience:</span>
+                  <span className="ml-2 text-gray-800">{result.metadata.cv_experience_years} years</span>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Soft Skills and Achievements */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Soft Skills Match */}
-            {matchResult.inferred_soft_skills_match.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Inferred Soft Skills Match</h3>
-                <div className="space-y-3">
-                  {matchResult.inferred_soft_skills_match.map((skill, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded">
-                      <p className="font-medium text-gray-900 capitalize">{skill.skill}</p>
-                      <p className="text-xs text-gray-600 mt-1">CV: "{skill.cv_context}"</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* CTC Alignment */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2 text-green-600" />
+              CTC Alignment
+            </h3>
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-gray-700">{result.ctc_feedback}</p>
+            </div>
+          </div>
 
-            {/* Quantifiable Achievements */}
-            {matchResult.quantifiable_achievements_summary.length > 0 && (
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                  <Award className="w-5 h-5 mr-2" />
-                  Key Quantifiable Achievements
-                </h3>
-                <div className="space-y-2">
-                  {matchResult.quantifiable_achievements_summary.map((achievement, index) => (
-                    <div key={index} className="p-2 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                      <p className="text-sm text-gray-700">{achievement}</p>
-                    </div>
-                  ))}
-                </div>
+          {/* Academic Alignment */}
+          {result.academic_alignment_feedback && (
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <GraduationCap className="w-5 h-5 mr-2 text-indigo-600" />
+                Academic Alignment
+              </h3>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-gray-700">{result.academic_alignment_feedback}</p>
               </div>
-            )}
+            </div>
+          )}
+
+          {/* Core Responsibilities Matched */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+              <CheckCircle className="w-5 h-5 mr-2 text-orange-600" />
+              Core Responsibilities Matched
+            </h3>
+            
+            <div className="space-y-3">
+              {result.jd_responsibilities_matched_in_cv.length > 0 ? (
+                result.jd_responsibilities_matched_in_cv.map((item, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <p className="text-gray-800 font-medium">{item.responsibility}</p>
+                      </div>
+                      <div className="ml-4 flex items-center">
+                        {item.found_in_cv ? (
+                          <div className="flex items-center text-green-600">
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            <span className="text-sm font-medium">Found</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-red-600">
+                            <XCircle className="w-4 h-4 mr-1" />
+                            <span className="text-sm font-medium">Not Found</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {item.found_in_cv && item.relevant_snippet && (
+                      <div className="mt-2 bg-green-50 border border-green-200 rounded p-3">
+                        <p className="text-sm text-green-800 font-medium mb-1">Relevant CV snippet:</p>
+                        <p className="text-sm text-green-700 italic">"{item.relevant_snippet}"</p>
+                        <div className="mt-1 text-xs text-green-600">
+                          Confidence: {Math.round(item.confidence * 100)}%
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <AlertCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>No specific responsibilities could be extracted from the Job Description</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Processing Metadata */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h4 className="font-medium text-gray-800 mb-3">Processing Summary</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">JD Skills:</span>
+                <span className="ml-2 font-medium text-gray-800">{result.metadata.jd_skills_count}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">CV Skills:</span>
+                <span className="ml-2 font-medium text-gray-800">{result.metadata.cv_skills_count}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">JD Responsibilities:</span>
+                <span className="ml-2 font-medium text-gray-800">{result.metadata.jd_responsibilities_count}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Files:</span>
+                <span className="ml-2 font-medium text-gray-800">Processed</span>
+              </div>
+            </div>
+            <div className="mt-3 text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded p-2">
+              <AlertCircle className="w-3 h-3 inline mr-1" />
+              {result.metadata.processing_note}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-center space-x-4 pt-4">
+            <button
+              onClick={() => {
+                setResult(null);
+                setJdFile(null);
+                setResumeFile(null);
+                setError(null);
+              }}
+              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Start New Analysis
+            </button>
+            <button
+              onClick={() => {
+                const dataStr = JSON.stringify(result, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `ats-match-result-${Date.now()}.json`;
+                link.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Export Results
+            </button>
           </div>
         </div>
       )}

@@ -1,0 +1,72 @@
+Senior Full Stack Developer - Remote Position
+
+Company: TechCorp Solutions
+Location: Remote (US/Canada)
+Experience: 5-8 years
+Salary: $110,000 - $140,000 annually
+
+Job Description:
+We are seeking a highly skilled Senior Full Stack Developer to join our dynamic engineering team. The ideal candidate will have extensive experience in modern web technologies and a passion for building scalable, high-performance applications.
+
+Key Responsibilities:
+• Develop and maintain scalable web applications using React and Node.js
+• Design and implement RESTful APIs and microservices architecture
+• Collaborate with cross-functional teams including product managers, designers, and QA engineers
+• Lead code reviews and mentor junior developers
+• Optimize application performance and ensure high availability
+• Implement automated testing strategies and CI/CD pipelines
+• Work with cloud platforms (AWS preferred) for deployment and scaling
+• Participate in system architecture decisions and technical planning
+
+Required Skills and Qualifications:
+• Bachelor's degree in Computer Science, Engineering, or related field
+• 5+ years of professional software development experience
+• Strong proficiency in JavaScript, TypeScript, and modern ES6+ features
+• Extensive experience with React.js and its ecosystem (Redux, React Router, etc.)
+• Solid backend development skills with Node.js and Express.js
+• Experience with relational databases (PostgreSQL, MySQL) and NoSQL databases (MongoDB)
+• Proficiency with version control systems (Git) and collaborative development workflows
+• Knowledge of containerization technologies (Docker, Kubernetes)
+• Experience with cloud platforms, preferably AWS (EC2, S3, RDS, Lambda)
+• Understanding of microservices architecture and API design principles
+• Familiarity with testing frameworks (Jest, Cypress, Mocha)
+• Experience with CI/CD tools (Jenkins, GitHub Actions, GitLab CI)
+
+Preferred Qualifications:
+• Master's degree in Computer Science or related field
+• Experience with Python and Django/Flask frameworks
+• Knowledge of machine learning concepts and libraries (TensorFlow, PyTorch)
+• Experience with message queues (Redis, RabbitMQ)
+• Familiarity with monitoring and logging tools (ELK stack, Prometheus, Grafana)
+• Previous experience in a leadership or mentoring role
+• Contributions to open-source projects
+• Experience with Agile/Scrum methodologies
+
+What We Offer:
+• Competitive salary range: $110,000 - $140,000 based on experience
+• Comprehensive health, dental, and vision insurance
+• 401(k) with company matching
+• Flexible work arrangements and remote-first culture
+• Professional development budget for conferences and training
+• Stock options and performance bonuses
+• 25 days PTO plus holidays
+• Modern tech stack and cutting-edge projects
+
+About TechCorp Solutions:
+TechCorp Solutions is a fast-growing technology company specializing in enterprise software solutions. We serve Fortune 500 clients across various industries and pride ourselves on innovation, quality, and customer satisfaction. Our engineering team values collaboration, continuous learning, and technical excellence.
+
+Application Process:
+Please submit your resume along with a cover letter highlighting your relevant experience. Include links to your GitHub profile and any notable projects or contributions. We are an equal opportunity employer committed to diversity and inclusion.
+
+Contact: careers@techcorp.com
+Application Deadline: Open until filled
+
+Required Experience:
+• Minimum 5 years of full-stack development experience
+• At least 3 years of React.js experience
+• 2+ years of Node.js backend development
+• Experience with cloud deployment and DevOps practices
+• Track record of delivering high-quality software products
+• Strong problem-solving and analytical skills
+• Excellent communication and teamwork abilities
+• Ability to work independently in a remote environment
