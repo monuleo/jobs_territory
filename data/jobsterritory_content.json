@@ -1,0 +1,94 @@
+{
+  "services": {
+    "recruitment_as_a_service": {
+      "keywords": ["raas", "recruitment as a service", "dedicated recruiters", "recruitment team"],
+      "answer": "Recruitment as a Service (RaaS) is our flagship offering that provides you with dedicated recruiters who become an extension of your team. Our RaaS model includes: dedicated recruitment specialists assigned to your account, custom hiring processes tailored to your company culture, scalable solutions that grow with your business, and deep industry expertise across 30+ sectors. The service is designed for companies looking for consistent, high-quality hiring support without the overhead of building an internal recruitment team."
+    },
+    "pay_per_hire": {
+      "keywords": ["pay per hire", "pph", "no upfront cost", "risk free", "pay only results"],
+      "answer": "Pay Per Hire is our risk-free recruitment model where you only pay when we successfully place a candidate who joins your organization. Key benefits include: no upfront costs or retainer fees, payment only after successful placement and completion of probation period, flexible engagement with no long-term contracts, and quality guarantee with 90-day replacement policy. This model is perfect for startups and companies who want to minimize recruitment risks while accessing top talent."
+    },
+    "fractional_hiring": {
+      "keywords": ["fractional hiring", "part time recruitment", "flexible hiring", "project based"],
+      "answer": "Fractional Hiring provides you with experienced recruitment professionals on a part-time or project basis. This service includes: senior recruiters working specific hours per week on your hiring needs, flexible engagement models (10, 20, or 30 hours per week), project-based recruitment for specific roles or departments, and cost-effective solution for companies with periodic hiring needs. Ideal for growing companies that need professional recruitment support without full-time commitment."
+    },
+    "c_suite_hiring": {
+      "keywords": ["c-suite", "executive search", "ceo", "cto", "cfo", "leadership hiring"],
+      "answer": "Our C-Suite Hiring service specializes in executive search and placement for top-tier leadership positions. We offer: confidential executive search processes, comprehensive leadership assessment and evaluation, access to our global network of senior executives, thorough background checks and reference verification, and post-placement support to ensure successful integration. Our executive recruiters have placed CEOs, CTOs, CFOs, and other C-level executives across various industries."
+    }
+  },
+  "hiring_process": {
+    "general_process": {
+      "keywords": ["hiring process", "recruitment process", "how it works", "steps"],
+      "answer": "Our hiring process typically follows these steps: 1) Initial consultation to understand your requirements and company culture, 2) Job description creation and role specification, 3) Candidate sourcing through our network and databases, 4) Initial screening and assessment of candidates, 5) Presentation of shortlisted candidates with detailed profiles, 6) Interview coordination and scheduling, 7) Reference checks and background verification, 8) Offer negotiation and placement, 9) Post-placement support and follow-up. The entire process typically takes 2-4 weeks depending on role complexity."
+    },
+    "timeline": {
+      "keywords": ["how long", "timeline", "duration", "time to hire"],
+      "answer": "Our typical hiring timelines are: Junior to Mid-level positions: 1-2 weeks, Senior positions: 2-3 weeks, C-Suite and Executive roles: 3-4 weeks, Specialized technical roles: 2-4 weeks. We provide initial candidate profiles within 48-72 hours of engagement. Our average response time for client queries is 24 hours, and we maintain regular communication throughout the process."
+    }
+  },
+  "industries": {
+    "technology": {
+      "keywords": ["technology jobs", "it jobs", "software", "tech roles", "programming"],
+      "answer": "We specialize in technology recruitment across various domains: Software Development (Full-stack, Frontend, Backend, Mobile), Data Science and Analytics, Cybersecurity, Cloud Computing and DevOps, AI/ML and Emerging Technologies, Product Management, UX/UI Design, and IT Infrastructure. We work with startups, scale-ups, and established tech companies to find talent in programming languages like Python, Java, JavaScript, React, Node.js, and many others."
+    },
+    "ecommerce": {
+      "keywords": ["ecommerce", "e-commerce", "retail", "online business"],
+      "answer": "Our e-commerce and retail recruitment covers: Digital Marketing and Growth roles, Operations and Supply Chain Management, Customer Experience and Support, Business Development and Partnerships, Analytics and Performance Marketing, Marketplace Management, and Category Management. We've successfully placed professionals at leading e-commerce companies including Flipkart, Myntra, Zepto, and many emerging D2C brands."
+    },
+    "manufacturing": {
+      "keywords": ["manufacturing", "engineering", "production", "industrial"],
+      "answer": "Manufacturing and Engineering recruitment includes: Mechanical, Electrical, and Industrial Engineers, Production and Operations Management, Quality Assurance and Control, Supply Chain and Logistics, Plant Management, R&D and Product Development, and Safety and Compliance roles. We serve automotive, aerospace, consumer goods, and heavy machinery industries with specialized technical talent."
+    },
+    "healthcare": {
+      "keywords": ["healthcare", "medical", "pharmaceutical", "biotech"],
+      "answer": "Healthcare and Life Sciences recruitment covers: Medical Professionals and Specialists, Pharmaceutical Sales and Marketing, Clinical Research and Development, Regulatory Affairs, Medical Device professionals, Healthcare Administration, and Biotech Research roles. We work with hospitals, pharmaceutical companies, medical device manufacturers, and healthcare startups."
+    },
+    "finance": {
+      "keywords": ["finance", "banking", "fintech", "bfsi", "financial services"],
+      "answer": "BFSI (Banking, Financial Services, Insurance) recruitment includes: Investment Banking and Corporate Finance, Risk Management and Compliance, Fintech and Digital Banking, Insurance and Actuarial roles, Wealth Management, Credit and Lending, and Financial Analysis positions. We serve traditional banks, fintech startups, insurance companies, and investment firms."
+    }
+  },
+  "company_info": {
+    "about": {
+      "keywords": ["about jobs territory", "company info", "who are you", "about us"],
+      "answer": "Jobs Territory is India's leading recruitment agency, transforming the way companies hire across the country. We've successfully completed 10,000+ placements with a 95% client satisfaction rate. Founded with the mission to connect exceptional talent with outstanding opportunities, we serve 500+ companies across 30+ industries. Our team of expert recruiters combines deep industry knowledge with innovative recruitment methodologies to deliver results within 48 hours average response time."
+    },
+    "locations": {
+      "keywords": ["locations", "offices", "where are you located", "cities"],
+      "answer": "Jobs Territory operates across major Indian cities including Mumbai, Delhi NCR, Bangalore, Pune, Hyderabad, Chennai, and Kolkata. While our headquarters is in Mumbai, we serve clients pan-India through our network of recruitment specialists. We also support remote hiring and have experience with international placements for Indian companies expanding globally."
+    },
+    "contact": {
+      "keywords": ["contact", "phone", "email", "reach out", "get in touch"],
+      "answer": "You can reach Jobs Territory through multiple channels: Email: hello@jobsterritory.com, Phone: +91 98765 43210, Website: www.jobsterritory.com. For specific services, you can also book a consultation call directly through our website. Our team responds to all inquiries within 24-48 hours. We also maintain active profiles on LinkedIn and other professional networks."
+    }
+  },
+  "pricing": {
+    "general": {
+      "keywords": ["pricing", "cost", "fees", "charges", "how much"],
+      "answer": "Our pricing varies by service model: Pay Per Hire: No upfront costs, fees only on successful placement (typically 15-25% of annual CTC), RaaS (Recruitment as a Service): Monthly retainer based on hiring volume and requirements, Fractional Hiring: Hourly or project-based pricing, C-Suite Hiring: Premium executive search fees. We offer transparent pricing with no hidden costs. Contact us for a customized quote based on your specific requirements."
+    }
+  },
+  "job_seekers": {
+    "general": {
+      "keywords": ["job seekers", "looking for job", "career", "opportunities"],
+      "answer": "For job seekers, Jobs Territory offers: Access to exclusive job opportunities across 30+ industries, Career counseling and resume optimization, Interview preparation and coaching, Salary negotiation support, and Long-term career guidance. We work with both experienced professionals and fresh graduates. Submit your resume through our website or connect with our recruiters on LinkedIn to explore current opportunities."
+    },
+    "resume": {
+      "keywords": ["resume", "cv", "profile", "application"],
+      "answer": "To optimize your chances with Jobs Territory: Ensure your resume is updated with latest experience and skills, Include relevant keywords for your target industry, Highlight quantifiable achievements and results, Keep format clean and ATS-friendly, and Include a professional summary. Our recruiters also provide resume review services to help you stand out in the competitive job market."
+    }
+  },
+  "success_stories": {
+    "general": {
+      "keywords": ["success stories", "case studies", "testimonials", "results"],
+      "answer": "Jobs Territory has delivered exceptional results: Zepto: Placed 220+ tech professionals in 45 days during their expansion, Maxvolt Industries: Successfully filled 15+ senior engineering roles including C-suite positions, FinTech Startup: Helped build core development team of 25+ professionals with 60% cost savings through Pay Per Hire model. Our clients consistently report 95% candidate retention rates and significant reduction in time-to-hire."
+    }
+  },
+  "international": {
+    "hiring": {
+      "keywords": ["international hiring", "global talent", "overseas", "foreign"],
+      "answer": "Our International Hiring service helps Indian companies access global talent and assists international companies in hiring from India. Services include: Global talent sourcing and screening, Visa and work permit guidance, Cross-cultural integration support, Remote team setup assistance, and Compliance with international employment laws. We have successfully placed professionals across US, Europe, Middle East, and Southeast Asia."
+    }
+  }
+}
